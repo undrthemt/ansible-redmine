@@ -1,0 +1,112 @@
+# install redmine
+
+- name: install svn
+  sudo: yes
+  yum:
+    name: subversion
+    state: present
+  tags:
+    - redmine
+    - install-svn
+
+- name: register redmine installed
+  sudo: yes
+  stat:
+    path: "{{ redmine_install_dir }}"
+  register: redmine_installed
+  tags:
+    - redmine
+ 
+- name: install redmine
+  sudo: yes
+  subversion:
+    repo: "http://svn.redmine.org/redmine/branches/{{ redmine_version }}"
+    dest: "{{ redmine_install_dir }}"
+    export: no
+    force: yes
+  when: redmine_installed.stat.exists == false
+  tags:
+    - redmine
+
+- name: configure redmine for connecting database
+  sudo: yes
+  template:
+    src: "{{ item }}"
+    dest: "{{ redmine_install_dir }}/config/{{ item }}"
+    mode: 0644
+  with_items:
+    - database.yml
+    - configuration.yml
+  changed_when: False
+  tags:
+    - redmine
+    - configure-redmine
+
+- name: chown redmine directory to ansible_ssh_user
+  sudo: yes
+  file:
+    path: "{{ redmine_install_dir }}"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    state: directory
+    recurse: yes
+  changed_when: False
+  tags:
+    - redmine
+    - chown-dir
+ 
+- name: install gem packages
+  sudo: no
+  command: "bundle install --without development test --path vendor/bundle"
+  args:
+    chdir: "{{ redmine_install_dir }}"
+    executable: ~/.rbenv/shims/bundle
+  when: redmine_installed.stat.exists == false
+  tags:
+    - redmine
+    - install-gem-packages
+ 
+- name: create private key for session protection
+  sudo: no
+  command: "bundle exec rake generate_secret_token"
+  args:
+    chdir: "{{ redmine_install_dir }}"
+    executable: ~/.rbenv/shims/bundle
+  when: redmine_installed.stat.exists == false
+  tags:
+    - redmine
+    - create-private-key
+
+- name: export RAILS_ENV, REDMINE_LANG on /etc/profile
+  sudo: yes
+  lineinfile:
+    line: "{{ item }}"
+    state: present
+    dest: /etc/profile
+  with_items:
+    - 'export RAILS_ENV="production"'
+    - 'export REDMINE_LANG="{{ redmine_lang }}"'
+  tags:
+    - redmine
+    - configure-env
+
+- name: db migration for redmine
+  sudo: no
+  shell: /bin/bash -lc "bundle exec rake db:migrate"
+  args:
+    chdir: "{{ redmine_install_dir }}"
+  when: redmine_installed.stat.exists == false
+  tags:
+    - redmine
+    - db-migration
+
+- name: load redmines default data 
+  sudo: no
+  shell: /bin/bash -lc "bundle exec rake redmine:load_default_data"
+  args:
+    chdir: "{{ redmine_install_dir }}"
+  when: redmine_installed.stat.exists == false
+  tags:
+    - redmine
+    - load-redmines-default-data
+

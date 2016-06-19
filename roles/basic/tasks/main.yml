@@ -1,0 +1,69 @@
+# basic tasks
+#
+# selinux がdisableになっていない場合、全てのセットアップ前にansible用にlibselinux-python が必要。
+# If selinux is not disabled, require libselinux-python before every setup.
+- name: install libselinux-python
+  sudo: yes
+  yum:
+    name: libselinux-python
+  tags:
+    - basic
+
+#
+# timezone setting.
+#
+- name: localize at /etc/sysconfig/clock
+  sudo: yes
+  lineinfile:
+    dest: /etc/sysconfig/clock
+    regexp: ^ZONE
+    line: ZONE=\"Asia/Tokyo\"
+  tags:
+    - basic
+    - timezone-settings
+
+- name: localize timezone
+  sudo: yes
+  command: tzdata-update
+  changed_when: False
+  tags:
+    - basic
+    - timezone-settings
+
+# install common tools.
+- name: install common tools
+  sudo: yes
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - ntp
+    - wget
+    - expect
+    - vim
+    - bind-utils
+    - traceroute
+    - mlocate
+    - nkf
+    - policycoreutils-python
+  tags:
+    - basic
+    - install-common-tools
+
+- name: locate updatedb
+  sudo: yes
+  command: updatedb
+  changed_when: False
+  tags:
+    - basic
+
+- name: run ntp 
+  sudo: yes
+  service:
+    name: ntpd
+    state: running
+    enabled: yes
+  tags:
+    - basic
+    - ntp
+

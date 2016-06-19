@@ -1,0 +1,45 @@
+- name: configure /etc/my.cnf
+  sudo: yes
+  ini_file:
+    dest: /etc/my.cnf
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: utf8
+    state: present
+  with_items:
+    - { section: mysqld , option: character-set-server }
+    - { section: mysqld_safe , option: default-character-set }
+  tags:
+    - redmine-mysql-config
+
+- name: install MySQL-python module for ansible
+  sudo: yes
+  yum:
+    name: MySQL-python
+    state: present
+  tags:
+    - redmine-mysql-config
+
+#@todo ルートユーザのパスワード変更。匿名ユーザ削除。
+# change root user's password and remove anonymous user.
+
+
+- name: create redmines database
+  mysql_db:
+    name: redmine
+    state: present
+    encoding: utf8
+  tags:
+    - redmine-mysql-config
+    - create-redmines-database
+
+- name: create redmines user
+  mysql_user: 
+    name: "redmine"
+    password: "{{ redmine_db_users_pass }}"
+    priv: "redmine.*:ALL,GRANT"
+    state: present
+  tags:
+    - redmine-mysql-config
+    - create-redmines-database
+

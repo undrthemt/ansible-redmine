@@ -1,0 +1,41 @@
+- name: change DocumentRoot to redmine install directory
+  sudo: yes
+  replace:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: '^DocumentRoot "/var/www/html"'
+    replace: 'DocumentRoot "{{ redmine_install_dir }}/public"'
+  tags:
+    - redmine-apache-config
+    - configure-httpd-conf
+
+# get the passenger info for httpd.conf.
+- name: get passenger snippet into passenger_snipet variable
+  sudo: no
+  shell: /bin/bash -lc "passenger-install-apache2-module --snippet"
+  register: passenger_snippet
+  changed_when: False
+  tags:
+    - redmine-apache-config
+ 
+# template で上記の--snippetの情報を使っています。
+# passenger_snippet variable is used at template file.
+- name: configure httpd/conf.d/passenger.conf using passenger_snipet
+  sudo: yes
+  template:
+    src: passenger.conf
+    dest: /etc/httpd/conf.d/passenger.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - redmine-apache-config
+
+- name: restart httpd
+  sudo: yes
+  service:
+    name: httpd
+    enabled: yes
+    state: restarted
+  tags:
+    - redmine-apache-config
+

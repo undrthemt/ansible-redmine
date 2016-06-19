@@ -1,0 +1,16 @@
+- hosts: redmine
+  vars:
+    redmine_version: 3.2-stable
+    redmine_install_dir: /var/lib/redmine
+    redmine_db_users_pass: edit_this_password
+    redmine_lang: ja
+  roles:
+    - basic
+    - redmine-depends
+    - mysql
+    - ruby
+    - redmine-mysql-config
+    - redmine
+    - passenger
+    - redmine-apache-config
+

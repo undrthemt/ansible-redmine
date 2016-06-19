@@ -1,0 +1,22 @@
+# install mysql
+
+- name: install mysql-server
+  sudo: yes
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: True 
+  with_items:
+    - mysql-server
+    - mysql-devel
+  tags:
+    - mysql
+
+- name: start mysqld
+  sudo: yes
+  service:
+    name: mysqld
+    enabled: yes
+    state: started
+  tags:
+    - mysql

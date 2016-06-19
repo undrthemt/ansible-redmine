@@ -1,0 +1,46 @@
+# install passenger
+
+- name: install passenger
+  sudo: no
+  gem:
+    name: passenger
+    executable: ~/.rbenv/shims/gem
+    state: present
+    user_install: no
+  tags:
+    - passenger
+
+# get the installed path of mod_passenger.so.
+- name: get mod_passenger.so path
+  sudo: no
+  shell: /bin/bash -l passenger-install-apache2-module --snippet | grep passenger_module | awk '{print $3}'
+  register: mod_passenger_path
+  changed_when: False
+  tags:
+    - passenger
+    - install-mod_passenger
+
+# check mod_passenger.so is already installed, useing registered variable.
+- name: check mod_passenger.so installed
+  sudo: no
+  shell: test -f "{{ mod_passenger_path.stdout }}"
+  register: mod_passenger_installed
+  failed_when: mod_passenger_installed.rc not in [0, 1]
+  changed_when: False
+  tags:
+    - passenger
+    - install-mod_passenger
+
+#- debug:
+#    msg: "{{ mod_passenger_path.stdout }}"
+#  tags:
+#    - install-mod_passenger
+
+- name: install mod_passenger.so with auto
+  sudo: no
+  shell: /bin/bash -l passenger-install-apache2-module --auto
+  when: mod_passenger_installed.rc == 1
+  tags:
+    - passenger
+    - install-mod_passenger
+
