@@ -28,6 +28,7 @@ Support OS CentOS 6.
 ansible version 1.9.6 or later.
 
 ## Usage
+- Configure hosts file for your servers.
 - Configure group_vars/all file.
 - Configure playbooks/redmine.yml file.
 - Edit roles/ruby/vars/main.yml file, if want to change ruby version.
