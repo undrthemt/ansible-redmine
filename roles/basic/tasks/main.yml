@@ -16,8 +16,8 @@
   sudo: yes
   lineinfile:
     dest: /etc/sysconfig/clock
-    regexp: ^ZONE
-    line: ZONE=\"Asia/Tokyo\"
+    regexp: '^ZONE'
+    line: 'ZONE="{{ time_zone }}"'
   tags:
     - basic
     - timezone-settings
