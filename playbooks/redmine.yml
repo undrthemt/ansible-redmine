@@ -4,6 +4,7 @@
     redmine_install_dir: /var/lib/redmine
     redmine_db_users_pass: edit_this_password
     redmine_lang: ja
+    time_zone: "Asia/Tokyo"
   roles:
     - basic
     - redmine-depends
